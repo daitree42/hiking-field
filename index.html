@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>徒步田野</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=Noto+Sans+SC:wght@300;400&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ink: #1a1612;
+    --ink-light: #4a3f35;
+    --ink-faint: #8a7a6e;
+    --paper: #f5f0e8;
+    --paper-dark: #ede6d6;
+    --paper-darker: #e0d5c0;
+    --accent: #7a3b2e;
+    --accent-light: #b05a45;
+    --rule: #c8b89a;
+    --font-serif: 'Noto Serif SC', serif;
+    --font-sans: 'Noto Sans SC', sans-serif;
+    --font-en: 'IM Fell English SC', serif;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: var(--font-serif); min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  img { max-width: 100%; height: auto; display: block; }
+
+  /* ===== NAV ===== */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: var(--paper); border-bottom: 1px solid var(--rule);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem; height: 52px;
+  }
+  .nav-brand { display: flex; align-items: center; gap: 0.6rem; cursor: pointer; }
+  .nav-brand svg { display: block; }
+  .nav-title { font-size: 1rem; letter-spacing: 0.25em; color: var(--ink-light); font-weight: 300; }
+  .nav-links { display: flex; gap: 2rem; list-style: none; }
+  .nav-links button {
+    background: none; border: none; cursor: pointer;
+    font-family: var(--font-serif); font-size: 0.8rem; color: var(--ink-faint);
+    letter-spacing: 0.1em; padding: 4px 0; border-bottom: 1px solid transparent;
+    transition: color 0.25s, border-color 0.25s;
+  }
+  .nav-links button.active, .nav-links button:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .page { display: none; padding-top: 52px; min-height: 100vh; }
+  .page.active { display: block; }
+
+  /* ===== BACK BUTTON ===== */
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: none; border: none; cursor: pointer;
+    font-family: var(--font-serif); font-size: 0.8rem; color: var(--ink-faint);
+    letter-spacing: 0.1em; padding: 8px 0; margin-bottom: 1.5rem;
+    transition: color 0.2s;
+  }
+  .back-btn:hover { color: var(--accent); }
+  .back-btn svg { width: 16px; height: 16px; }
+
+  /* ===== HOME PAGE ===== */
+  .home-wrap { max-width: 680px; margin: 0 auto; padding: 0 2rem 6rem; }
+
+  /* Banner */
+  .home-banner {
+    width: 100%; padding-top: 2rem; margin-bottom: 1rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .home-banner svg { display: block; width: 100%; height: auto; }
+  .home-header-text { padding: 1.8rem 0; }
+  .home-header-text h1 {
+    font-family: var(--font-serif); font-size: 2rem; font-weight: 300;
+    letter-spacing: 0.35em; color: var(--ink); margin-bottom: 0.5rem;
+  }
+  .home-header-text .subtitle {
+    font-size: 0.7rem; color: var(--ink-faint); letter-spacing: 0.25em;
+    font-family: var(--font-en);
+  }
+  .home-header-text .tagline {
+    font-size: 0.88rem; color: var(--ink-light); line-height: 1.7;
+    margin-top: 1.2rem; max-width: 480px;
+  }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 6rem; margin-top: 1rem; }
+  .timeline::before {
+    content: ''; position: absolute; left: 4.5rem; top: 0.6rem; bottom: 0;
+    width: 1px; background: var(--rule);
+  }
+  .timeline-year { position: relative; margin-bottom: 2.5rem; }
+  .year-label {
+    position: absolute; left: -5.5rem; top: 0.15rem;
+    font-family: var(--font-en); font-size: 0.7rem; color: var(--ink-faint);
+    letter-spacing: 0.1em; width: 4rem; text-align: right;
+  }
+  .timeline-entry {
+    position: relative; margin-bottom: 1.4rem; cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .entry-icon {
+    position: absolute; left: -2.1rem; top: 0.15rem;
+    width: 20px; height: 20px;
+  }
+  .entry-icon svg { width: 20px; height: 20px; }
+  .timeline-entry:hover .entry-icon svg path,
+  .timeline-entry:hover .entry-icon svg polyline,
+  .timeline-entry:hover .entry-icon svg line { stroke: var(--accent); }
+  .entry-text { padding-right: 0.5rem; }
+  .entry-date {
+    font-family: var(--font-en); font-size: 0.68rem; color: var(--ink-faint);
+    letter-spacing: 0.06em; margin-bottom: 0.1rem;
+  }
+  .entry-title {
+    font-size: 0.95rem; font-weight: 400; color: var(--ink-light);
+    letter-spacing: 0.04em; transition: color 0.2s; line-height: 1.5;
+  }
+  .timeline-entry:hover .entry-title { color: var(--accent); }
+  .entry-location {
+    font-size: 0.72rem; color: var(--ink-faint); margin-top: 0.1rem;
+    font-family: var(--font-sans); letter-spacing: 0.05em;
+  }
+  .entry-dot {
+    display: none;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center; padding: 4rem 2rem; color: var(--ink-faint);
+  }
+  .empty-state svg { margin: 0 auto 1.5rem; display: block; opacity: 0.4; }
+  .empty-state p { font-size: 0.9rem; line-height: 1.7; }
+
+  /* ===== ARTICLE PAGE ===== */
+  .article-wrap { max-width: 720px; margin: 0 auto; padding: 2rem 2rem 6rem; }
+
+  .article-meta { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--rule); }
+  .article-date {
+    font-family: var(--font-en); font-size: 0.72rem; color: var(--ink-faint);
+    letter-spacing: 0.12em; margin-bottom: 0.8rem;
+  }
+  .article-title {
+    font-size: 1.6rem; font-weight: 300; letter-spacing: 0.1em;
+    line-height: 1.5; margin-bottom: 0.5rem;
+  }
+  .article-location {
+    font-size: 0.82rem; color: var(--ink-faint); font-family: var(--font-sans);
+    letter-spacing: 0.1em; margin-bottom: 1rem;
+  }
+  .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .tag {
+    font-size: 0.68rem; color: var(--ink-faint); letter-spacing: 0.08em;
+    padding: 2px 10px; border: 1px solid var(--rule);
+    font-family: var(--font-sans); border-radius: 2px;
+  }
+  .tag.accent { color: var(--accent); border-color: var(--accent-light); background: rgba(122,59,46,0.04); }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex; flex-wrap: wrap; gap: 1.5rem;
+    padding: 1.2rem 0; margin-bottom: 2rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .stat-item { display: flex; flex-direction: column; }
+  .stat-value {
+    font-family: var(--font-en); font-size: 1.1rem; color: var(--ink);
+    letter-spacing: 0.05em;
+  }
+  .stat-label {
+    font-size: 0.62rem; color: var(--ink-faint); letter-spacing: 0.12em;
+    font-family: var(--font-sans); margin-top: 0.15rem;
+  }
+
+  /* Summary block */
+  .summary-block {
+    background: var(--paper-dark); padding: 1.2rem 1.5rem; margin-bottom: 2rem;
+    border: 1px solid var(--rule); font-size: 0.9rem; line-height: 1.8;
+    color: var(--ink-light);
+  }
+
+  /* Article body */
+  .article-body { line-height: 1.9; font-size: 0.95rem; color: var(--ink-light); }
+  .article-body p { margin-bottom: 1.3rem; text-indent: 2em; }
+  .article-body p.no-indent { text-indent: 0; }
+  .article-body h3 {
+    font-size: 1.1rem; font-weight: 400; letter-spacing: 0.08em;
+    margin: 2rem 0 0.8rem; color: var(--ink);
+  }
+  .article-body .route-note {
+    background: var(--paper-dark); padding: 1rem 1.3rem; margin: 1.5rem 0;
+    border-left: 3px solid var(--accent-light); font-size: 0.85rem;
+    line-height: 1.7; color: var(--ink-light);
+  }
+  .article-body .route-note strong {
+    font-weight: 600; color: var(--accent);
+  }
+
+  /* Photo gallery placeholder */
+  .photo-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem;
+    margin: 2rem 0;
+  }
+  .photo-grid .photo {
+    aspect-ratio: 4/3; background: var(--paper-darker);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-faint); font-size: 0.7rem; font-family: var(--font-sans);
+    letter-spacing: 0.05em; border: 1px solid var(--rule);
+  }
+  .photo-grid .photo:first-child { grid-column: 1 / -1; aspect-ratio: 16/9; }
+  .photo-grid .photo.placeholder::after {
+    content: '📷 照片'; opacity: 0.5;
+  }
+
+  /* ===== ARCHIVE PAGE ===== */
+  .archive-wrap { max-width: 600px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+  .archive-wrap h2 {
+    font-size: 1.3rem; font-weight: 300; letter-spacing: 0.2em;
+    margin-bottom: 2.5rem; color: var(--ink);
+  }
+  .archive-list { list-style: none; }
+  .archive-year { margin-bottom: 2rem; }
+  .archive-year-header {
+    font-family: var(--font-en); font-size: 0.8rem; color: var(--ink-faint);
+    letter-spacing: 0.1em; margin-bottom: 0.8rem; padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .archive-item {
+    display: flex; align-items: baseline; gap: 1rem;
+    padding: 0.4rem 0; cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .archive-item:hover { opacity: 0.7; }
+  .archive-item-date {
+    font-family: var(--font-en); font-size: 0.68rem; color: var(--ink-faint);
+    letter-spacing: 0.05em; min-width: 3rem;
+  }
+  .archive-item-title {
+    font-size: 0.88rem; color: var(--ink-light); letter-spacing: 0.03em;
+  }
+  .archive-empty { color: var(--ink-faint); line-height: 1.7; }
+
+  /* ===== ABOUT PAGE ===== */
+  .about-wrap { max-width: 600px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+  .about-wrap h2 {
+    font-size: 1.3rem; font-weight: 300; letter-spacing: 0.2em;
+    margin-bottom: 1.5rem; color: var(--ink);
+  }
+  .about-content { line-height: 1.9; font-size: 0.92rem; color: var(--ink-light); }
+  .about-content p { margin-bottom: 1rem; }
+  .about-content .sig {
+    margin-top: 2rem; font-family: var(--font-en); font-size: 0.8rem;
+    color: var(--ink-faint); letter-spacing: 0.1em;
+  }
+  .about-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
+    margin: 2rem 0; padding: 1.5rem; background: var(--paper-dark);
+    border: 1px solid var(--rule);
+  }
+  .about-stat { text-align: center; }
+  .about-stat-num {
+    font-family: var(--font-en); font-size: 1.6rem; color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+  .about-stat-label {
+    font-size: 0.65rem; color: var(--ink-faint); letter-spacing: 0.12em;
+    font-family: var(--font-sans); margin-top: 0.2rem;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 640px) {
+    nav { padding: 0 1rem; }
+    .nav-links { gap: 1.2rem; }
+    .home-wrap, .article-wrap, .archive-wrap, .about-wrap { padding-left: 1rem; padding-right: 1rem; }
+    .home-header-text h1 { font-size: 1.5rem; }
+    .timeline { padding-left: 4.5rem; }
+    .timeline::before { left: 3rem; }
+    .year-label { left: -4rem; width: 3rem; font-size: 0.6rem; }
+    .entry-icon { left: -1.6rem; }
+    .article-title { font-size: 1.3rem; }
+    .stats-bar { gap: 1rem; }
+    .stat-value { font-size: 0.95rem; }
+    .photo-grid { grid-template-columns: 1fr; }
+    .photo-grid .photo:first-child { grid-column: 1; }
+    .about-stats { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 400px) {
+    .nav-title { font-size: 0.85rem; letter-spacing: 0.15em; }
+    .nav-links { gap: 0.8rem; }
+    .nav-links button { font-size: 0.72rem; }
+    .about-stats { grid-template-columns: 1fr; gap: 0.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<nav>
+  <div class="nav-brand" data-page="home">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <polyline points="3,18 8,8 11,12 15,4 19,18" stroke="var(--ink-faint)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="2" y1="18" x2="20" y2="18" stroke="var(--ink-faint)" stroke-width="1.3" stroke-linecap="round"/>
+    </svg>
+    <span class="nav-title">徒步田野</span>
+  </div>
+  <ul class="nav-links">
+    <li><button data-page="home" class="active">首页</button></li>
+    <li><button data-page="archive">存档</button></li>
+    <li><button data-page="about">关于</button></li>
+  </ul>
+</nav>
+
+<!-- ===== HOME PAGE ===== -->
+<div id="page-home" class="page active">
+  <div class="home-wrap">
+    <!-- Banner SVG — mountain range -->
+    <div class="home-banner">
+      <svg viewBox="0 0 680 120" preserveAspectRatio="xMidYMid meet">
+        <path d="M0,96 Q40,88 80,72 Q110,58 130,62 Q150,66 170,52 Q190,38 220,44 Q240,48 260,30 Q280,14 310,20 Q335,26 350,12 Q365,2 390,8 Q410,14 425,4 Q440,-2 460,6 Q480,14 500,22 Q520,30 540,26 Q560,22 580,36 Q600,50 620,42 Q640,36 660,58 Q670,68 680,62 L680,120 L0,120 Z" fill="var(--paper-darker)" opacity="0.6"/>
+        <path d="M0,104 Q60,96 120,86 Q170,76 200,80 Q230,84 270,68 Q300,56 330,60 Q360,64 390,50 Q410,40 430,44 Q455,48 480,36 Q500,28 520,32 Q540,36 560,46 Q580,56 600,50 Q620,44 640,60 Q660,72 680,66 L680,120 L0,120 Z" fill="var(--paper-darker)" opacity="0.4"/>
+        <path d="M0,110 Q80,106 160,100 Q230,94 280,96 Q330,98 380,90 Q420,84 460,86 Q500,88 540,82 Q580,76 620,80 Q650,84 680,78 L680,120 L0,120 Z" fill="var(--paper-darker)" opacity="0.25"/>
+      </svg>
+    </div>
+
+    <div class="home-header-text">
+      <h1>徒步田野</h1>
+      <p class="subtitle">A Field Guide to Walking</p>
+      <p class="tagline">在城市和山野之间行走，记录脚下土地的纹理与温度。</p>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline" id="timeline">
+      <!-- rendered by JS -->
+      <div class="empty-state" id="timeline-empty">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <polyline points="8,38 18,22 24,28 32,14 40,38" stroke="var(--ink-faint)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/>
+          <line x1="6" y1="38" x2="42" y2="38" stroke="var(--ink-faint)" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+        </svg>
+        <p>还没有徒步记录。<br>下次出门走走，然后记下来。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ARTICLE PAGE ===== -->
+<div id="page-article" class="page">
+  <div class="article-wrap" id="article-container">
+    <button class="back-btn" onclick="navigateTo('home')">
+      <svg viewBox="0 0 16 16" fill="none">
+        <path d="M10,3 L5,8 L10,13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      返回
+    </button>
+    <div id="article-content">
+      <!-- rendered by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ===== ARCHIVE PAGE ===== -->
+<div id="page-archive" class="page">
+  <div class="archive-wrap">
+    <h2>全部记录</h2>
+    <div class="archive-list" id="archive-list">
+      <!-- rendered by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ===== ABOUT PAGE ===== -->
+<div id="page-about" class="page">
+  <div class="about-wrap">
+    <h2>关于</h2>
+    <div class="about-content">
+      <p>「徒步田野」是一个人的徒步记录。每一篇都是一次行走的切片——穿过城市老街、郊野小径、山间古道。</p>
+      <p>没有征服多少座山的雄心，只是想好好看看走过的路。记下地名、路程、天气，还有那些让脚步慢下来的事物：一堵旧墙的光影、一棵老树的姿态、一段石板路被踩出的光泽。</p>
+      <p>走得多了，脚下的土地会变成一本可以翻来翻去的书。</p>
+      <div class="about-stats" id="about-stats">
+        <!-- rendered by JS -->
+      </div>
+      <p class="sig">— 一蓑烟雨</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const HIKES = [
+  {
+    id: 'baiyun-2025',
+    date: '2025-11-15',
+    title: '白云山南麓',
+    location: '广州·白云山',
+    distance: '8.2 km',
+    duration: '3h 20min',
+    elevation: '380 m',
+    pace: '24′/km',
+    tags: ['广州', '山野', '日归'],
+    summary: '从云台花园起步，沿南麓步道蜿蜒上行。这条路不走主峰，而是沿山腰横切，树荫浓密，几乎不见天日。途中经过几处废弃的亭台，石阶上覆满落叶和青苔。',
+    body: [
+      '出门的时候天还是阴的。云层压得很低，空气里有雨后的潮气。这样的天气最适合走山路——不晒，不闷，脚步声被湿漉漉的路面吃掉，整座山都是安静的。',
+      '从云台花园旁边的小路上山，石板路保养得不错，看得出有人定期清扫。走了约二十分钟，路开始变窄，两边的灌木几乎要合拢。停下来系鞋带时，看见一只绿色的螽斯趴在叶片上，触须微微颤动。',
+      '路过一座废弃的亭子，匾额上的字已经看不清了，只剩「×晖亭」的轮廓。石桌石凳还在，桌面落了一层枯叶。坐在那里喝水，听见风穿过桉树林的声音——那种干燥的、带着桉叶清香的风。',
+      '过了半山腰的路标后，路分成两条。左边那条通往主峰，游客多些；右边是沿山腰的横切路，通往明珠楼方向。选了右边。这一段路几乎遇不到人，只有鸟鸣和远处的城市白噪音。偶尔透过树缝能看到山下的楼房，像微缩模型一样整齐排列。',
+      '走到水库附近时，天终于放晴了。阳光从云缝里斜射下来，水面泛起一片细碎的光。坐在水库边的石阶上把剩下的苹果吃掉，看一只白鹭从对岸起飞，贴着水面滑翔了一段，消失在树林后面。',
+    ],
+    practical: '起点：云台花园公交站。全程石阶路和土路交替，难度较低。建议带 1L 水，中途无补给。耗时约 3-4 小时。',
+  },
+  {
+    id: 'liwan-2025',
+    date: '2025-10-08',
+    title: '西关漫步：从荔湾湖到沙面',
+    location: '广州·荔湾区',
+    distance: '6.5 km',
+    duration: '2h 40min',
+    elevation: '20 m',
+    pace: '24′/km',
+    tags: ['广州', '城市漫步', '历史'],
+    summary: '从荔湾湖出发，穿过龙津西路的老骑楼街，经恩宁路到沙面。一路是西关大屋、趟栊门、麻石路——广州的老城肌理在这里保存得最好。',
+    body: [
+      '选在下午三点出发，光线最柔和的时候。从荔湾湖公园南门出，沿龙津西路走，这一段骑楼保存得相当完整。有些铺面还开着老式理发店、香烛店、杂货铺，招牌是手写的楷体字。',
+      '在逢源路拐弯，钻进一条叫「耀华大街」的内巷。麻石路面被岁月磨得发亮，两侧是典型的西关大屋——青砖墙、趟栊门、满洲窗。有一间屋子的趟栊半开着，能看到里面的天井，地上摆了几盆兰花。',
+      '出了巷子就是恩宁路。这一段比龙津西路热闹些，但骑楼的规模更大。路两边开了很多小吃店和文创店，永庆坊改造后游客不少。绕过主街，拐进旁边的「永庆一巷」，人一下子少了。这里有李小龙祖居，外墙是明黄色，安静地立在巷子深处。',
+      '沿恩宁路一直走到尽头，过六二三路就是沙面。沙面的建筑群完全是另一种气质——殖民时期的欧式建筑，高大的榕树在路面上方交织成穹顶。下午四点半的光线穿过树叶洒在鹅黄色的墙上，有一种不真实的温暖感。',
+      '在沙面的江边长椅上坐了一会儿。江水浑浊而缓慢，有货船缓缓驶过，汽笛声低沉悠长。对岸是白鹅潭，正在建设中的摩天楼群轮廓模糊在暮色里。',
+    ],
+    practical: '起点：荔湾湖公园（中山八路地铁站）。全程城市铺装路面。中途可在恩宁路或永庆坊补给。傍晚沙面拍照效果最佳。',
+  },
+  {
+    id: 'huolu-2025',
+    date: '2025-08-20',
+    title: '火炉山夜行',
+    location: '广州·火炉山森林公园',
+    distance: '7.0 km',
+    duration: '2h 50min',
+    elevation: '260 m',
+    pace: '24′/km',
+    tags: ['广州', '山野', '夜行'],
+    summary: '傍晚六点从北门进山，赶在日落前登顶看晚霞，再打着头灯走夜路下山。夜晚的山有另一种性格。',
+    body: [
+      '五点半到火炉山北门，天还亮着。决定走环线上山——从北门上，经白架顶，从南门下，再沿公路绕回北门。全程约七公里。',
+      '上山的路有一段连续的台阶，走得有些喘。停下喝水时回头看了一眼——山下的城市已在暮色中亮起点点灯火。继续往上，光线越来越暗，林子里的蝉鸣却越来越响，几乎是震耳欲聋。',
+      '到白架顶的时候正好赶上日落最后的余晖。天空从西边的橘红色渐变到头顶的深蓝，城市像一片发光的电路板铺展在山脚下。山顶只有两三个人，大家都在安静地看，没人说话。',
+      '天黑得很快。打亮头灯继续走——头灯的光束在林子里扫来扫去，照亮石阶、树根、偶尔一只被惊动的蜗牛。夜晚的山林和白天的感觉完全不同：视野收窄到光柱所及，听觉变得更敏锐。能分辨出好几种虫鸣，远处还有猫头鹰的叫声。',
+      '下山的路走得很慢。不是因为难走，而是不想走太快——夜风凉爽，林子里有一种白天没有的宁静。到南门的时候，手机上显示走了将近三小时。',
+    ],
+    practical: '起点：火炉山北门（华观路）。头灯必带，建议两人以上结伴。夏季蚊虫多，穿长裤。山路全程无明显分岔。',
+  },
+  {
+    id: 'star-creek-2025',
+    date: '2025-06-30',
+    title: '从化星溪线',
+    location: '广州·从化区',
+    distance: '12.0 km',
+    duration: '4h 10min',
+    elevation: '180 m',
+    pace: '20′/km',
+    tags: ['广州', '郊野', '溯溪'],
+    summary: '东星村到溪头村的经典徒步路线，沿水道和竹林穿行。夏天走这条线最合适——大部分路段有树荫遮挡，沿途有溪流可戏水。',
+    body: [
+      '夏天走星溪线是广州附近最舒服的徒步选择之一。大部分路段在竹林和树荫下，阳光被层层叠叠的叶子过滤成柔和的光斑。',
+      '从东星村出发，穿过一片果园之后进了竹林。竹子在头顶交合成甬道，风穿过时发出特有的沙沙声——不是树叶的声响，更像是竹竿碰撞的沉闷回响。地面上铺了厚厚一层竹叶，踩上去又软又滑。',
+      '路过一处浅滩，水清澈见底。脱了鞋踩进去，溪水冰凉，来自上游的山泉。水底的鹅卵石被水流冲刷得很光滑，踩上去有一种踏实的感觉。在水边坐了一会儿，看水蜘蛛在表面滑行。',
+      '之后有一段较陡的上坡，走出汗了。坡顶是一小片开阔地，能看到远处连绵的山丘，一层淡似一层。在这里把带的饭团吃掉，配一壶冷茶，觉得满足了。',
+      '接近溪头村时，路边的田野开始取代竹林，能看到水稻田和菜地。有农人在劳作，弯腰的姿势和几百年前的农耕画里一模一样。下午三点到溪头村，在村口的豆腐花摊上喝了一碗，撒了姜汁糖浆，是那种最简单的幸福。',
+    ],
+    practical: '起点：从化东星村。建议自驾或拼车到起点，从溪头村出可坐公交回从化市区。竹林路段需防滑鞋。夏季可带泳衣戏水。全程约 4-5 小时。',
+  },
+  {
+    id: 'huangpu-changzhou-2025',
+    date: '2025-04-15',
+    title: '黄埔古港到长洲岛',
+    location: '广州·黄埔/长洲',
+    distance: '9.0 km',
+    duration: '3h 30min',
+    elevation: '15 m',
+    pace: '23′/km',
+    tags: ['广州', '江岸', '渡轮', '历史'],
+    summary: '从黄埔古港沿珠江岸线走到鱼珠码头，坐渡轮过江上长洲岛，再沿岛西岸走回长洲码头。一路是清代码头、渔村、废弃船厂和军校旧址。',
+    body: [
+      '起点设在黄埔古港。这一带自宋代就是港口，清代的「黄埔税口」设在这里。古港的石堤和拴船桩还在，但江面上已经看不见帆影，只有运沙船突突地驶过。',
+      '沿着江岸往鱼珠方向走。这一段不属于任何景区，就是普通的江边路——一边是民居和工厂仓库，一边是浑浊的江水。路况不太好，有些地方被杂草覆盖了，但正因如此，几乎遇不到人。路过一个废弃的小码头，栈桥的铁架已经锈蚀，几只白鹭站在残桩上。',
+      '到鱼珠码头正好赶上整点的渡轮。跨上甲板的时候，船身轻轻晃了一下。珠江在这一段格外宽阔，江风扑面，有种暂时的解放感。回头看城市的轮廓越来越远，前方的长洲岛越来越近。',
+      '上岛后沿西岸向南步行。黄埔军校旧址在岛屿南端，但这次不打算进去——绕过景区，走沿江的村道。路两边是老旧的职工宿舍楼和造船厂的遗迹，墙上爬满了薜荔藤。时间在这里似乎走得更慢一些。',
+      '在岛西端的江边大堤上坐了很久。对面是番禺，夕阳把江面染成了铁锈红。一艘渔船在江心收网，动作不急不缓，像一幅画的慢动作。',
+    ],
+    practical: '鱼珠码头到长洲岛渡轮 2 元/人，可刷羊城通。岛上有自行车出租。沿江路部分路段较荒芜，建议穿长裤防蚊虫。',
+  },
+  {
+    id: 'out-of-eden-2025',
+    date: '2025-02-14',
+    title: '行走伊甸园·粤北段',
+    location: '广东·清远/韶关',
+    distance: '26.0 km',
+    duration: '7h 30min',
+    elevation: '620 m',
+    pace: '17′/km',
+    tags: ['长距离', '山野', '古道'],
+    summary: '伊甸园步道（Out of Eden Walk）自中东延伸至中国，途径广东。选了粤北山区一段保存最完好的古道——从清远浸潭到韶关沙坪，沿山谷和村庄山脊线行走。',
+    body: [
+      '凌晨五点半从清远出发，天还没亮。车灯照亮盘山路两旁的桉树林，树干在灯光下泛着惨白的光。今天的路线是伊甸园步道在广东段中最长的一段连续步道——从浸潭镇到沙坪镇，全程约二十六公里，大部分是山路和古道。',
+      '起点是一段石板古道，宽不足一米，石面被无数双脚打磨得光滑。这是明清时期英德与广宁之间的商道。走了没多久，鞋子就被露水打湿了——道旁的草叶在清晨的潮气里弯着腰，拂过小腿，凉丝丝的。',
+      '穿过第一个山口时太阳刚好升起，光线贴着山脊线勾勒出一条金边。山谷里有雾，像一床棉被盖在村子上方。有几只白鹇被脚步声惊动，扑棱棱飞进了树林深处——尾巴很长，飞行姿态笨拙又优雅。',
+      '中午在路过的村子里歇脚。村口的老榕树下有几条石凳，一个老人坐在那里编竹筐。他的手指很灵活，竹篾在指间穿来穿去，像在编织时间本身。他看了我一眼，点了点头，继续手里的活计。问他还有多远到沙坪，他指了指后面的山：「翻过去就是，两个钟。」',
+      '翻过最后一道山梁时，腿已经很沉了。但视野突然开阔——沙坪镇在脚下的山谷里，炊烟袅袅，狗叫声隐约可闻。下坡的路比想象中长，膝盖开始抗议。终于踏上镇口的公路时，天色已经偏西。',
+    ],
+    practical: '长距离徒步需提前规划交通。建议轻装，至少带 2L 水和路餐。部分路段手机无信号，下载离线地图。穿防滑鞋，带登山杖更佳。',
+  },
+];
+
+// ===== STATE =====
+let currentPage = 'home';
+
+// ===== NAVIGATION =====
+function navigateTo(page, data) {
+  // hide all pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  // show target
+  const target = document.getElementById('page-' + page);
+  if (target) target.classList.add('active');
+  // update nav
+  document.querySelectorAll('.nav-links button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.page === page);
+  });
+  // scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  currentPage = page;
+
+  if (page === 'archive') renderArchive();
+  if (page === 'about') renderAboutStats();
+}
+
+// ===== RENDER TIMELINE =====
+function renderTimeline() {
+  const container = document.getElementById('timeline');
+  // remove all children, keep empty-state
+  const emptyState = document.getElementById('timeline-empty');
+
+  if (HIKES.length === 0) {
+    emptyState.style.display = 'block';
+    // remove any rendered entries
+    container.querySelectorAll('.timeline-year').forEach(el => el.remove());
+    return;
+  }
+  emptyState.style.display = 'none';
+
+  // Group by year
+  const byYear = {};
+  HIKES.forEach(h => {
+    const year = h.date.slice(0, 4);
+    if (!byYear[year]) byYear[year] = [];
+    byYear[year].push(h);
+  });
+
+  const years = Object.keys(byYear).sort((a, b) => b - a);
+
+  // Remove existing timeline entries
+  container.querySelectorAll('.timeline-year').forEach(el => el.remove());
+
+  years.forEach(year => {
+    const yearGroup = document.createElement('div');
+    yearGroup.className = 'timeline-year';
+
+    const label = document.createElement('span');
+    label.className = 'year-label';
+    label.textContent = year;
+    yearGroup.appendChild(label);
+
+    byYear[year].forEach(hike => {
+      const entry = document.createElement('div');
+      entry.className = 'timeline-entry';
+      entry.onclick = () => openArticle(hike.id);
+
+      entry.innerHTML = `
+        <div class="entry-icon">
+          <svg viewBox="0 0 20 20" fill="none">
+            <polyline points="4,16 8,8 10,11 14,4 17,16" stroke="var(--ink-faint)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <line x1="3" y1="16" x2="17" y2="16" stroke="var(--ink-faint)" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="entry-text">
+          <div class="entry-date">${formatDate(hike.date)}</div>
+          <div class="entry-title">${hike.title}</div>
+          <div class="entry-location">${hike.location} · ${hike.distance}</div>
+        </div>
+      `;
+      yearGroup.appendChild(entry);
+    });
+
+    container.appendChild(yearGroup);
+  });
+}
+
+// ===== OPEN ARTICLE =====
+function openArticle(id) {
+  const hike = HIKES.find(h => h.id === id);
+  if (!hike) return;
+
+  const container = document.getElementById('article-content');
+
+  const tagsHTML = hike.tags.map(t =>
+    `<span class="tag${t === '长距离' || t === '夜行' ? ' accent' : ''}">${t}</span>`
+  ).join('');
+
+  const bodyHTML = hike.body.map(p => `<p>${p}</p>`).join('');
+
+  container.innerHTML = `
+    <div class="article-meta">
+      <div class="article-date">${formatDate(hike.date)}</div>
+      <h2 class="article-title">${hike.title}</h2>
+      <div class="article-location">${hike.location}</div>
+      <div class="tags">${tagsHTML}</div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-item">
+        <span class="stat-value">${hike.distance}</span>
+        <span class="stat-label">距离</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">${hike.duration}</span>
+        <span class="stat-label">用时</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">${hike.elevation}</span>
+        <span class="stat-label">累计爬升</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">${hike.pace}</span>
+        <span class="stat-label">配速</span>
+      </div>
+    </div>
+
+    <div class="summary-block">${hike.summary}</div>
+
+    <div class="article-body">
+      ${bodyHTML}
+      <div class="route-note">
+        <strong>实用信息</strong><br>
+        ${hike.practical}
+      </div>
+    </div>
+  `;
+
+  navigateTo('article');
+}
+
+// ===== RENDER ARCHIVE =====
+function renderArchive() {
+  const container = document.getElementById('archive-list');
+  container.innerHTML = '';
+
+  if (HIKES.length === 0) {
+    container.innerHTML = '<p class="archive-empty">还没有记录。</p>';
+    return;
+  }
+
+  const byYear = {};
+  HIKES.forEach(h => {
+    const y = h.date.slice(0, 4);
+    if (!byYear[y]) byYear[y] = [];
+    byYear[y].push(h);
+  });
+
+  const years = Object.keys(byYear).sort((a, b) => b - a);
+
+  years.forEach(year => {
+    const yearSection = document.createElement('div');
+    yearSection.className = 'archive-year';
+
+    yearSection.innerHTML = `<div class="archive-year-header">${year}</div>`;
+
+    byYear[year].forEach(hike => {
+      const item = document.createElement('div');
+      item.className = 'archive-item';
+      item.onclick = () => openArticle(hike.id);
+      item.innerHTML = `
+        <span class="archive-item-date">${hike.date.slice(5)}</span>
+        <span class="archive-item-title">${hike.title} <span style="font-size:0.7rem;color:var(--ink-faint);font-family:var(--font-sans);">${hike.location}</span></span>
+      `;
+      yearSection.appendChild(item);
+    });
+    container.appendChild(yearSection);
+  });
+}
+
+// ===== RENDER ABOUT STATS =====
+function renderAboutStats() {
+  const container = document.getElementById('about-stats');
+  if (!container) return;
+  const totalHikes = HIKES.length;
+  const totalDist = HIKES.reduce((sum, h) => {
+    const km = parseFloat(h.distance);
+    return isNaN(km) ? sum : sum + km;
+  }, 0);
+  const totalElev = HIKES.reduce((sum, h) => {
+    const m = parseFloat(h.elevation);
+    return isNaN(m) ? sum : sum + m;
+  }, 0);
+
+  container.innerHTML = `
+    <div class="about-stat">
+      <div class="about-stat-num">${totalHikes}</div>
+      <div class="about-stat-label">次徒步</div>
+    </div>
+    <div class="about-stat">
+      <div class="about-stat-num">${totalDist.toFixed(0)}</div>
+      <div class="about-stat-label">总公里</div>
+    </div>
+    <div class="about-stat">
+      <div class="about-stat-num">${totalElev.toFixed(0)}</div>
+      <div class="about-stat-label">累计爬升 (m)</div>
+    </div>
+  `;
+}
+
+// ===== HELPERS =====
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}.${month}.${day}`;
+}
+
+// ===== EVENT BINDING =====
+document.addEventListener('DOMContentLoaded', () => {
+  // Nav buttons
+  document.querySelectorAll('.nav-links button').forEach(btn => {
+    btn.addEventListener('click', () => navigateTo(btn.dataset.page));
+  });
+  // Brand click -> home
+  document.querySelector('.nav-brand').addEventListener('click', () => navigateTo('home'));
+
+  // Initial render
+  renderTimeline();
+  renderAboutStats();
+});
+</script>
+</body>
+</html>
